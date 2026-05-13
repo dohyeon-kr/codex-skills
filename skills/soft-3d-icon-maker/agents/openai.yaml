@@ -1,0 +1,4 @@
+interface:
+  display_name: "Soft 3D Icon Maker"
+  short_description: "Create soft 3D transparent PNG icons"
+  default_prompt: "Use $soft-3d-icon-maker to create transparent PNG icons of these objects in a soft rounded 3D style."
