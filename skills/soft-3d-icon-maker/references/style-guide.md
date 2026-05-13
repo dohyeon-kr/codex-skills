@@ -5,6 +5,7 @@
 - Rounded, inflated, toy-like 3D objects with chunky proportions.
 - Smooth clay/plastic material with low-to-medium gloss.
 - Pastel color blocking with a few darker accents for readability.
+- Subject fidelity matters: preserve defining shapes, pose, accessories, and major color patches from the user's object or reference image.
 - Soft studio lighting from the upper left or front-left.
 - Subtle ambient occlusion inside seams and under overlapping parts.
 - Clean isolated object silhouette that remains readable at small icon sizes.
@@ -17,6 +18,7 @@
 - Prefer a three-quarter view for objects with depth.
 - Use front or near-front view for flat objects, symbols, screens, papers, and signs.
 - Preserve recognizability by exaggerating the largest identifying shapes.
+- When a reference image is provided, match its large readable traits before optimizing for easy background removal.
 
 ## Color
 
@@ -29,6 +31,7 @@
 
 - Replace tiny text with simple emblem-like marks or raised grooves.
 - Use large seams, bevels, buttons, handles, holes, or bands as readable features.
+- For character-like objects, keep the pose, expression, accessories, and color-block placement recognizable.
 - Avoid busy realistic texture, grime, scratches, labels, brand marks, and micro-detail.
 
 ## Lighting And Edges

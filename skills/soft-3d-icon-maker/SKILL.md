@@ -14,10 +14,11 @@ Read `references/style-guide.md` when composing detailed prompts or judging whet
 ## Workflow
 
 1. Identify the icon subject list, count, intended size, and whether each subject should be a separate PNG or arranged as one sheet.
-2. Use the `imagegen` skill for raster generation. Prefer one `image_gen` call per distinct icon when the user needs individual assets.
-3. For built-in image generation, do not trust visual "transparent background" requests by themselves. Generate the icon on a perfectly flat chroma-key background, remove the key locally with the imagegen chroma-key helper, then verify the PNG alpha channel.
-4. Keep every icon centered with generous padding, a single object focus, no labels, no watermark, no background scene, and no cast shadow that depends on a floor.
-5. Validate the final PNG: alpha channel exists, corners are transparent, edges are clean, subject is not cropped, and the style remains consistent across the set.
+2. Preserve the visual goal first: a polished soft 3D icon with rounded toy-like forms, clay/plastic material, readable object identity, and object-specific details. Do not simplify the icon into flat vector shapes just to make alpha extraction easier.
+3. Use the `imagegen` skill for raster generation. Prefer one `image_gen` call per distinct icon when the user needs individual assets.
+4. For built-in image generation, do not trust visual "transparent background" requests by themselves. Generate the finished-looking icon on a perfectly flat chroma-key background, remove the key locally with the imagegen chroma-key helper, then verify the PNG alpha channel.
+5. Keep every icon centered with generous padding, a single object focus, no labels, no watermark, no background scene, and no cast shadow that depends on a floor.
+6. Validate the final PNG: subject fidelity first, then style fidelity, then alpha channel. Alpha correctness is not a reason to accept a visually weak icon.
 
 ## Prompt Pattern
 
@@ -25,7 +26,8 @@ Use this prompt as the base and adapt only the subject-specific line:
 
 ```text
 Create a single soft rounded 3D icon of <subject>.
-Style: cute toy-like clay render, inflated rounded forms, smooth bevels, pastel color blocking, polished plastic-and-clay material, subtle ambient occlusion, soft studio lighting, crisp silhouette, cohesive premium 3D icon pack aesthetic.
+Style: cute toy-like clay render, inflated rounded forms, smooth bevels, polished plastic-and-clay material, soft studio lighting, subtle ambient occlusion, tactile 3D depth, cohesive premium 3D icon pack aesthetic.
+Subject fidelity: include the object's defining shapes, proportions, accessories, and color patches at a simplified but recognizable 3D icon level. Keep details chunky and molded, not flat or line-art.
 Composition: centered isolated object, three-quarter view, readable at small sizes, generous transparent padding, no background scene.
 Output: final RGBA PNG after chroma-key removal. Background/canvas pixels must be fully transparent with alpha 0. The icon object itself should remain opaque with alpha 1, with only antialiased edge pixels using partial alpha. Clean alpha edges, no colored backdrop.
 Avoid: text, labels, logos, watermark, hard realism, flat vector style, thin details, sharp corners, busy texture, dramatic shadows, floor plane, cropped edges, checkerboard transparency pattern.
@@ -40,14 +42,20 @@ Keep all icons visually consistent: same camera angle, lighting direction, mater
 ## Style Controls
 
 - Use the user's requested object category directly. The style can apply to tools, food, office supplies, devices, toys, household items, nature objects, symbols, app concepts, or themed icon packs.
-- Prefer simple forms over literal detail. Make the object readable through silhouette, color blocking, and a few large features rather than tiny marks or text.
+- Prefer simple forms over tiny literal detail, but keep enough object-specific features that the result clearly matches the requested object or reference. Make the object readable through silhouette, color blocking, large molded features, accessories, and pose.
 - Use 3-5 main colors per icon, with soft warm whites, sky blues, coral reds, butter yellows, mint greens, lavender, tan, charcoal, or navy accents as appropriate to the object.
 - Use a three-quarter camera angle for objects with depth; use near-front views only for very flat subjects such as maps or passports.
 - Avoid realistic surface grime, complex micro-texture, photorealistic environments, and tiny text that image models will garble.
 
+## Reference Fidelity
+
+When the user provides a reference image, treat it as visual direction for the icon's subject design, not just as a style hint. Extract the large readable traits: silhouette, pose, major color blocks, accessories, facial expression, and material feel. Preserve those traits in soft 3D form before considering transparency cleanup.
+
+For a lucky cat or maneki-neko reference, include the defining elements unless the user asks otherwise: rounded seated body, oversized rounded head, raised paw, closed smiling eyes, small pink nose, short molded whiskers, red collar, gold bell, gold coin or plaque, cream body, orange and dark gray calico patches, pink inner ears, and soft clay/plastic bevels.
+
 ## Transparent PNG Handling
 
-Built-in `image_gen` does not expose a guaranteed native transparent-background control. For transparent PNG deliverables, prefer the chroma-key workflow:
+Built-in `image_gen` does not expose a guaranteed native transparent-background control. For transparent PNG deliverables, prefer the chroma-key workflow, but do not reduce the subject design to make chroma-key extraction easier:
 
 ```text
 Create the icon on a perfectly flat solid #00ff00 chroma-key background for background removal. The background must be one uniform color with no shadows, gradients, texture, reflections, floor plane, or lighting variation. Keep the subject fully separated from the background with crisp edges and generous padding. Do not use #00ff00 anywhere in the subject.
