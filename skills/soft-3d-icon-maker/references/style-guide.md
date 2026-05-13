@@ -8,7 +8,7 @@
 - Soft studio lighting from the upper left or front-left.
 - Subtle ambient occlusion inside seams and under overlapping parts.
 - Clean isolated object silhouette that remains readable at small icon sizes.
-- Transparent PNG output with generous padding and no environment.
+- RGBA PNG output with background/canvas alpha 0, generous padding, and no environment.
 
 ## Composition
 
@@ -35,6 +35,8 @@
 
 - Use soft shadows only as object self-shadowing, not a ground shadow.
 - Keep edges crisp enough for alpha extraction.
+- Keep solid object interiors fully opaque with alpha 1; only antialiased edge pixels should use partial alpha.
+- Do not include an opaque white, colored, gradient, studio, or square-tile background.
 - Avoid transparent, glassy, hairy, smoky, liquid, or fuzzy materials unless the user explicitly requests them; these are harder to cut out cleanly.
 
 ## Negative Prompt Additions
