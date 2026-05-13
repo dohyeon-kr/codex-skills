@@ -37,6 +37,7 @@
 - Keep edges crisp enough for alpha extraction.
 - Keep solid object interiors fully opaque with alpha 1; only antialiased edge pixels should use partial alpha.
 - Do not include an opaque white, colored, gradient, studio, or square-tile background.
+- Never use a gray checkerboard pattern to represent transparency. A checkerboard visible in the PNG is a failed output, not alpha transparency.
 - Avoid transparent, glassy, hairy, smoky, liquid, or fuzzy materials unless the user explicitly requests them; these are harder to cut out cleanly.
 
 ## Negative Prompt Additions
@@ -44,5 +45,5 @@
 Use these when quality drifts:
 
 ```text
-Avoid flat vector illustration, photorealistic product photo, hard metal realism, busy background, floor plane, cast shadow, text, logo, watermark, thin outlines, sharp spikes, tiny labels, cropped edges, green fringe, jagged alpha edge.
+Avoid flat vector illustration, photorealistic product photo, hard metal realism, busy background, floor plane, cast shadow, text, logo, watermark, thin outlines, sharp spikes, tiny labels, cropped edges, green fringe, jagged alpha edge, checkerboard transparency pattern.
 ```
