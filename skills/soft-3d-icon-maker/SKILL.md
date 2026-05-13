@@ -7,7 +7,7 @@ description: Create soft, rounded 3D object icon assets as transparent PNGs in a
 
 ## Overview
 
-Create transparent PNG icons of any object in a soft 3D toy-render style: rounded shapes, chunky proportions, pastel color blocking, subtle bevels, gentle studio lighting, and clean object silhouettes.
+Create soft 3D toy-render icons of any object, then deliver them as transparent PNGs by removing a flat solid-color background in post-processing. The visual icon comes from image generation; alpha handling is a cleanup step.
 
 Read `references/style-guide.md` when composing detailed prompts or judging whether a result matches the intended look.
 
@@ -15,8 +15,8 @@ Read `references/style-guide.md` when composing detailed prompts or judging whet
 
 1. Identify the icon subject list, count, intended size, and whether each subject should be a separate PNG or arranged as one sheet.
 2. Preserve the visual goal first: a polished soft 3D icon with rounded toy-like forms, clay/plastic material, readable object identity, and object-specific details. Do not simplify the icon into flat vector shapes just to make alpha extraction easier.
-3. Use the `imagegen` skill for raster generation. Prefer one `image_gen` call per distinct icon when the user needs individual assets.
-4. For built-in image generation, do not trust visual "transparent background" requests by themselves. Generate the finished-looking icon on a perfectly flat chroma-key background, remove the key locally with the imagegen chroma-key helper, then verify the PNG alpha channel.
+3. Use the `imagegen` skill for raster generation. Generate the finished-looking icon on a perfectly flat solid chroma-key background, not on a requested transparent or checkerboard background. Prefer one `image_gen` call per distinct icon when the user needs individual assets.
+4. Copy the generated source image into the workspace, then use the imagegen chroma-key helper to remove only the solid background and write the final RGBA PNG.
 5. Keep every icon centered with generous padding, a single object focus, no labels, no watermark, no background scene, and no cast shadow that depends on a floor.
 6. Validate the final PNG: subject fidelity first, then style fidelity, then alpha channel. Alpha correctness is not a reason to accept a visually weak icon.
 
@@ -29,7 +29,8 @@ Create a single soft rounded 3D icon of <subject>.
 Style: cute toy-like clay render, inflated rounded forms, smooth bevels, polished plastic-and-clay material, soft studio lighting, subtle ambient occlusion, tactile 3D depth, cohesive premium 3D icon pack aesthetic.
 Subject fidelity: include the object's defining shapes, proportions, accessories, and color patches at a simplified but recognizable 3D icon level. Keep details chunky and molded, not flat or line-art.
 Composition: centered isolated object, three-quarter view, readable at small sizes, generous transparent padding, no background scene.
-Output: final RGBA PNG after chroma-key removal. Background/canvas pixels must be fully transparent with alpha 0. The icon object itself should remain opaque with alpha 1, with only antialiased edge pixels using partial alpha. Clean alpha edges, no colored backdrop.
+Generation background: perfectly flat solid #00ff00 chroma-key background for later removal; one uniform color, no shadows, gradients, checkerboard, texture, reflections, floor plane, or lighting variation. Do not use #00ff00 anywhere in the subject.
+Final output: RGBA PNG after chroma-key removal. Background/canvas pixels must be fully transparent with alpha 0. The icon object itself should remain opaque with alpha 1, with only antialiased edge pixels using partial alpha. Clean alpha edges, no colored backdrop.
 Avoid: text, labels, logos, watermark, hard realism, flat vector style, thin details, sharp corners, busy texture, dramatic shadows, floor plane, cropped edges, checkerboard transparency pattern.
 ```
 
@@ -55,7 +56,14 @@ For a lucky cat or maneki-neko reference, include the defining elements unless t
 
 ## Transparent PNG Handling
 
-Built-in `image_gen` does not expose a guaranteed native transparent-background control. For transparent PNG deliverables, prefer the chroma-key workflow, but do not reduce the subject design to make chroma-key extraction easier:
+Built-in `image_gen` does not expose a guaranteed native transparent-background control. For transparent PNG deliverables, the default path is:
+
+1. Generate with `imagegen` on a flat solid chroma-key background.
+2. Copy the generated source image from `$CODEX_HOME/generated_images/...` into the workspace.
+3. Remove the chroma-key background with the imagegen helper.
+4. Validate actual PNG alpha pixels.
+
+Prompt the generation step like this:
 
 ```text
 Create the icon on a perfectly flat solid #00ff00 chroma-key background for background removal. The background must be one uniform color with no shadows, gradients, texture, reflections, floor plane, or lighting variation. Keep the subject fully separated from the background with crisp edges and generous padding. Do not use #00ff00 anywhere in the subject.
@@ -74,7 +82,11 @@ python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chrom
   --despill
 ```
 
-If a true/native transparency path is explicitly available, it is acceptable to request `RGBA PNG with background alpha 0` directly, but still validate the actual pixels before delivery.
+Use `#ff00ff` instead of `#00ff00` when the subject is green or contains green edge details.
+
+Do not hand-draw, vectorize, or recreate the icon with Python/canvas/SVG just to satisfy alpha. If alpha removal fails but the visual icon is good, retry chroma-key removal settings or regenerate with a flatter solid background.
+
+If a true/native transparency path is explicitly available, it is acceptable to request `RGBA PNG with background alpha 0` directly, but still validate the actual pixels before delivery. Do not use a visible checkerboard as a transparency substitute.
 
 After background removal or native transparent generation, verify:
 

@@ -9,7 +9,7 @@
 - Soft studio lighting from the upper left or front-left.
 - Subtle ambient occlusion inside seams and under overlapping parts.
 - Clean isolated object silhouette that remains readable at small icon sizes.
-- RGBA PNG output with background/canvas alpha 0, generous padding, and no environment.
+- Generate the icon on a flat solid chroma-key background first; deliver RGBA PNG with background/canvas alpha 0 after post-processing.
 
 ## Composition
 
@@ -19,6 +19,7 @@
 - Use front or near-front view for flat objects, symbols, screens, papers, and signs.
 - Preserve recognizability by exaggerating the largest identifying shapes.
 - When a reference image is provided, match its large readable traits before optimizing for easy background removal.
+- The background color is only a removable matte. It must not influence the lighting, pose, or design of the icon.
 
 ## Color
 
@@ -41,6 +42,7 @@
 - Keep solid object interiors fully opaque with alpha 1; only antialiased edge pixels should use partial alpha.
 - Do not include an opaque white, colored, gradient, studio, or square-tile background.
 - Never use a gray checkerboard pattern to represent transparency. A checkerboard visible in the PNG is a failed output, not alpha transparency.
+- Do not replace image-generated 3D artwork with hand-drawn or vector-like shapes solely to make alpha easy.
 - Avoid transparent, glassy, hairy, smoky, liquid, or fuzzy materials unless the user explicitly requests them; these are harder to cut out cleanly.
 
 ## Negative Prompt Additions
