@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rounded Line SVG Icon Maker"
+  short_description: "Create rounded outline SVG icons"
+  default_prompt: "Use $rounded-line-svg-icon-maker to create a rounded outline SVG icon for this concept."
