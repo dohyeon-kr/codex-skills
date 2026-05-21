@@ -76,11 +76,20 @@ Failing to make this decision leads to bugs like "fixed 48px child collides with
 5. **Preserve the box model** — declared `padding` / `border` / `margin` must remain. When child total size exceeds container inner width, padding gets visually consumed. Don't shrink children to fit; **redesign with relative distribution** (flex:1 / grid 1fr).
 6. **Don't fake photographic assets or custom-styled icons with raw SVG** — faces/photos/composite illustrations/custom icon families drawn from circles and paths become awkward placeholders. Asset decisions go to **image-asset-strategy**, whose default route is **delegate to Codex via `/codex:rescue`** (Codex owns the `imagegen` pipeline). Only canonical trivial UI glyphs (search, home, menu, chevron, well-known social logos) stay as inline SVG.
 7. **Report system-level problems** — repeated patterns, missing semantics, one-context-only components: don't keep stamping CSS, propose a token/variant/contract addition.
-8. **CSS unit hierarchy** — `rem` for text and UI density, `px` for visual crispness, `%`/`vw`/`vh`/`fr` for layout proportions, `em` for spacing that should scale with the component's own font size. Don't unify everything in rem or everything in px.
-   - **rem**: `font-size`, `line-height`, `padding`, `margin`, `gap`, `border-radius`. Respects users who change the browser default font size (accessibility).
-   - **px**: `border-width`, hairlines, icon stroke, sub-pixel alignment, 1px overlaps.
-   - **%, vw/vh, fr**: layout proportions (grid `1fr 1fr`, viewport-based `100vh`, etc.).
-   - **em**: spacing that should follow the component's own `font-size` (e.g., button horizontal padding scaling with label text).
+8. **CSS unit & sizing rules** — unit choice is accessibility, not aesthetics. The browser default font-size and user zoom must remain usable. Ten rules, in priority order:
+
+   1. **`font-size` defaults to `rem`** — never lock body text in `px`. `rem` lets users scale via the browser default font-size and is the foundation for everything else listed here.
+   2. **`line-height` is a unitless number** — `1.5`, `1.7`. Unitless multiplies the *element's own* `font-size`; using `rem`/`px`/`em` here locks line-height to a snapshot of the parent and breaks responsive type.
+   3. **Global spacing tokens (`--space-*`) are in `rem`** — `padding`, `margin`, `gap` all scale with the user's chosen base size. A `--space-md: 1rem` token is correct; `16px` is not.
+   4. **Component-internal `padding` may use `em`** when the padding should grow with the text inside it (e.g., a chip's horizontal padding tracking its label size). This is the rare allowed `em`; default is still `rem`.
+   5. **`border` / `divider` / `hairline` use `px`** — 1px must remain 1 device pixel; `rem` borders thicken when users scale up, which is visually wrong. `border-width`, `outline`, hairline `box-shadow`/`inset` rings stay in `px`.
+   6. **Avoid fixed `height`** — prefer `min-height` + content wrapping. A fixed `height` collides with longer text / larger fonts / user zoom; `min-height` honors the floor while letting content grow.
+   7. **Media-query breakpoints default to `em`** — `@media (min-width: 48em)`, not `768px`. `em`-based breakpoints respect the user's font-size scaling, so a user at 125% browser font-size hits the breakpoint at the proportionally larger viewport — what they actually want.
+   8. **Mobile viewport height: prefer `svh` / `dvh` over `vh`** — bare `100vh` on mobile measures the *largest* possible viewport (toolbar collapsed), causing the bottom of the page to sit behind the URL bar on first load. `svh` (small) / `dvh` (dynamic) / `lvh` (large) are the modern fix; default to `svh` for first-paint correctness or `dvh` if the layout should breathe as the toolbar collapses.
+   9. **`html { font-size }` defaults to `100%`** — do not pin it to `16px` or `62.5%`. Pinning erases user preference. The `62.5%` trick (1rem = 10px math convenience) costs the very accessibility that `rem` was meant to give you; don't take it.
+   10. **Verify three accessibility states** before declaring layout done: **320px** width (smallest common viewport — WCAG reflow requirement at 400% zoom on 1280px), **200% browser zoom**, and **browser-default font-size cranked up** (Chrome / Firefox `chrome://settings`/`about:preferences` "Default font size: Very large"). If any of these breaks the layout, the unit choices above were violated somewhere.
+
+   Use this hierarchy as your default; the named exceptions in rules 4-5 are the only places `em` / `px` should appear when `rem` could have worked.
 
 ---
 
@@ -107,6 +116,11 @@ Failing to make this decision leads to bugs like "fixed 48px child collides with
 - ❌ **Flex column scroll-container with content overflow → siblings get squashed** — a scroll container declared as `display: flex; flex-direction: column; overflow: auto` will let the default `flex-shrink: 1` collapse short-but-important children (a hero, a sticky header) down to their min-content height once the total content exceeds the container. The hero looks fine in dev when content is short, then "disappears" (collapses to 36px) once you add the rest of the page. Fix: mark every non-scrolling child with `flex-shrink: 0`, or switch the container to `display: block` + `min-height` if scroll is the only reason flex was chosen.
 - ❌ **Sticky element without an explicit `z-index`** — `position: sticky` does **not** create a stacking context that floats above siblings by default. Once a later section (a banner, a modal-like card, a toast) introduces its own stacking context or its own positioned children, the sticky nav silently slides under them. Always pair `position: sticky` with `z-index: <value above any sibling stacking context>`.
 - ❌ **Introducing a sticky / fixed bar without reserving content padding for it** — adding a sticky bottom nav of height 64px without adding `padding-bottom: 64px` (or its safe-area equivalent) to the scroll content means the **last screenful of content sits under the nav and is permanently hidden**. The bug rarely shows up in dev because designers always scroll to the top. Same trap with sticky top headers and the first viewport.
+- ❌ **Fixed `height` on content containers** — `height: 80px` on a card / header / button forces longer text or larger user font-size to clip or overflow. Use `min-height` + content wrapping instead. The single exception is when the element is genuinely a fixed-pixel widget (icon, avatar, hairline) whose visual identity *is* the size.
+- ❌ **Media-query breakpoints in `px`** — `@media (max-width: 768px)` ignores user font-size scaling. A user at 125% browser font-size has effectively a smaller viewport in *content units*, but a px breakpoint doesn't know that. Use `em` breakpoints (`@media (max-width: 48em)`); they respect the user.
+- ❌ **`100vh` on mobile layouts** — `vh` measures the largest possible viewport (mobile toolbar collapsed), so the bottom of the page is hidden behind the browser UI on first load. Prefer `svh` (small / first-paint correct) or `dvh` (dynamic / breathes with the toolbar). Reserve bare `vh` for desktop or with explicit fallback (`min-height: 100vh; min-height: 100svh`).
+- ❌ **Locking `html { font-size }` to `16px` or `62.5%`** — erases user font-size preference. The `62.5%` "1rem = 10px" trick costs the very accessibility that `rem` was supposed to give you. Default to `100%`. If a `rem` value math is awkward, fix the value, not the root.
+- ❌ **Shipping without checking 320px width / 200% zoom / browser font-size up** — these are the three accessibility tripwires for the unit rules above. If you didn't see the layout in those states, the unit choices were assumptions, not decisions.
 
 ---
 
@@ -349,6 +363,10 @@ After edits, you should be able to answer:
 2. **State matrix** — hover/focus/disabled/loading/empty handled consistently?
 3. **Token hygiene** — every value (spacing/color/gradient/size) expressible as variant or semantic? No raw scatter?
 4. **Blast radius** — no visual regression at any importing call site?
+5. **Accessibility tripwires (the unit hierarchy in §2.8 manifests here)** — three states you must actually observe before declaring done:
+   - **320px viewport width** — the WCAG reflow floor (content must remain readable / interactive at 400% zoom on a 1280px screen, which collapses to ~320 CSS px). Cards stack, no horizontal scroll, hit targets still ≥ 44px.
+   - **200% browser zoom** — Cmd/Ctrl+`+` until 200%. Does layout reflow gracefully or does anything clip, overflow, or break out of its container?
+   - **Browser-default font-size cranked up** — Chrome `chrome://settings` / Firefox `about:preferences` → set "Default font size" to *Very large*. `rem`-based layouts should grow; `px`-locked layouts will visibly fail. This is the test that catches violated unit rules.
 
 For visual / measurement comparison against a reference image, hand off to **visual-reference-compare**.
 
