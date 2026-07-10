@@ -1,6 +1,14 @@
 ---
 name: css-judgment
-description: Use when modifying CSS — adjusting padding/margin/gap/width/height/position/z-index/overflow, hover/focus/responsive states, or directly using primitive tokens (raw spacing, raw colors). Guides the judgment of CSS work rather than the syntax. Determines sizing ownership (outer layout vs inner content), preserves the box model, enforces token hierarchy, and catches observable anti-patterns: child margin for sibling spacing, intentionless `flex:1` or `width:100%`, raw px / one-off token combinations, gradient hex composition at call sites, `margin: auto` for large-area distribution. For image assets (faces, photos, composite illustrations) trigger image-asset-strategy first; for post-work visual comparison trigger visual-reference-compare.
+description: >-
+  Use when modifying CSS — adjusting padding/margin/gap/width/height/position/z-index/overflow,
+  hover/focus/responsive states, or directly using primitive tokens (raw spacing, raw colors).
+  Guides the judgment of CSS work rather than the syntax. Determines sizing ownership (outer layout
+  vs inner content), preserves the box model, enforces token hierarchy, and catches observable
+  anti-patterns: child margin for sibling spacing, intentionless `flex:1` or `width:100%`, raw px /
+  one-off token combinations, gradient hex composition at call sites, `margin: auto` for large-area
+  distribution. For image assets (faces, photos, composite illustrations) trigger
+  image-asset-strategy first; for post-work visual comparison trigger visual-reference-compare.
 ---
 
 # CSS Judgment Skill
