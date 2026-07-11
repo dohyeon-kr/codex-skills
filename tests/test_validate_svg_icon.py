@@ -10,9 +10,9 @@ VALIDATOR = ROOT / "skills/rounded-line-svg-icon-maker/scripts/validate_svg_icon
 
 
 class ValidateSvgIconTest(unittest.TestCase):
-    def validate(self, svg):
-        with tempfile.NamedTemporaryFile("w", suffix=".svg", encoding="utf-8") as handle:
-            handle.write(svg)
+    def validate_bytes(self, data):
+        with tempfile.NamedTemporaryFile("wb", suffix=".svg") as handle:
+            handle.write(data)
             handle.flush()
             return subprocess.run(
                 [sys.executable, str(VALIDATOR), handle.name],
@@ -20,6 +20,9 @@ class ValidateSvgIconTest(unittest.TestCase):
                 capture_output=True,
                 text=True,
             )
+
+    def validate(self, svg):
+        return self.validate_bytes(svg.encode("utf-8"))
 
     def test_accepts_safe_outline_icon(self):
         result = self.validate(
@@ -70,6 +73,19 @@ class ValidateSvgIconTest(unittest.TestCase):
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("DTD", result.stdout)
+
+    def test_rejects_utf16_dtd_before_xml_parsing(self):
+        svg = (
+            '<?xml version="1.0" encoding="UTF-16"?>'
+            '<!DOCTYPE svg [<!ENTITY x "unsafe">]>'
+            '<svg viewBox="0 0 24 24" fill="none"><path id="&x;"/></svg>'
+        )
+
+        for encoding in ("utf-16", "utf-16-le", "utf-16-be"):
+            with self.subTest(encoding=encoding):
+                result = self.validate_bytes(svg.encode(encoding))
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("UTF-8", result.stdout)
 
     def test_rejects_xml_stylesheet(self):
         result = self.validate(

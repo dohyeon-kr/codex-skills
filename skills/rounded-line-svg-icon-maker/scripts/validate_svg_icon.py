@@ -50,14 +50,21 @@ def main():
     if len(data) > MAX_SVG_BYTES:
         return fail(f"SVG exceeds {MAX_SVG_BYTES} byte limit")
 
-    lowered_data = data.lower()
-    if b"<!doctype" in lowered_data or b"<!entity" in lowered_data:
+    if b"\x00" in data:
+        return fail("SVG must be NUL-free UTF-8 text")
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        return fail(f"SVG must be UTF-8 text: {exc}")
+
+    lowered_text = text.lower()
+    if "<!doctype" in lowered_text or "<!entity" in lowered_text:
         return fail("DTD and entity declarations are not allowed")
-    if b"<?xml-stylesheet" in lowered_data:
+    if "<?xml-stylesheet" in lowered_text:
         return fail("XML stylesheet declarations are not allowed")
 
     try:
-        root = ET.fromstring(data)
+        root = ET.fromstring(text)
     except ET.ParseError as exc:
         return fail(f"invalid XML: {exc}")
 
